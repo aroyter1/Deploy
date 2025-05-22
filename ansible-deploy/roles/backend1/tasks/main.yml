@@ -1,0 +1,21 @@
+- name: Copy docker-compose.yml for backend1
+  copy:
+    src: files/docker-compose-backend1.yml
+    dest: /opt/app/docker-compose.yml
+
+- name: Copy Backend sources
+  synchronize:
+    src: ../../Backend/
+    dest: /opt/app/Backend/
+    recursive: yes
+
+- name: Copy certs
+  synchronize:
+    src: ../../certs/
+    dest: /opt/app/certs/
+    recursive: yes
+
+- name: Start backend1
+  shell: docker-compose up -d backend1
+  args:
+    chdir: /opt/app 

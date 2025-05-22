@@ -1,0 +1,15 @@
+- name: Copy docker-compose.yml for dns
+  copy:
+    src: files/docker-compose-dns.yml
+    dest: /opt/app/docker-compose.yml
+
+- name: Copy DNS sources
+  synchronize:
+    src: ../../dns/
+    dest: /opt/app/dns/
+    recursive: yes
+
+- name: Start DNS
+  shell: docker-compose up -d dns
+  args:
+    chdir: /opt/app 
