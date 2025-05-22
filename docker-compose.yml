@@ -1,0 +1,124 @@
+version: '3.8'
+
+services:
+  certgen:
+    build:
+      context: .
+      dockerfile: Dockerfile.certs
+    volumes:
+      - ./certs:/certs
+    environment:
+      - CERT_DIR=/certs
+
+  dns:
+    build: ./dns
+    container_name: local-dns
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.2
+
+  frontend:
+    build:
+      context: ./Frontend
+      args:
+        - VITE_API_URL=http://api.frontend.local:8080/api
+    ports:
+      - "80:80"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    depends_on:
+      - dns
+      - api
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.3
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://api.frontend.local:8080
+      - NGINX_HOST=frontend.local
+    extra_hosts:
+      - "api.frontend.local:172.20.0.4"
+      - "backend1.local:172.20.0.10"
+      - "backend2.local:172.20.0.11"
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    ports:
+      - "8080:80"
+    volumes:
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.4
+    depends_on:
+      - backend1
+      - backend2
+    environment:
+      - NGINX_HOST=api.frontend.local
+    extra_hosts:
+      - "frontend.local:172.20.0.3"
+      - "backend1.local:172.20.0.10"
+      - "backend2.local:172.20.0.11"
+
+  backend1:
+    build: ./Backend
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/url-shortener
+      - CLIENT_URL=http://frontend.local
+      - BASE_URL=http://api.frontend.local:8080
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.10
+    volumes:
+      - ./certs:/app/certs:ro
+    depends_on:
+      - mongo
+
+  backend2:
+    build: ./Backend
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo:27017/url-shortener
+      - CLIENT_URL=http://frontend.local
+      - BASE_URL=http://api.frontend.local:8080
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.11
+    volumes:
+      - ./certs:/app/certs:ro
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      app_net:
+        ipv4_address: 172.20.0.20
+
+networks:
+  app_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+volumes:
+  mongodb_data: 

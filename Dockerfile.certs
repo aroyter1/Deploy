@@ -1,0 +1,17 @@
+FROM alpine:latest
+
+RUN apk add --no-cache openssl
+
+# Create nginx user and group with specific IDs
+RUN addgroup -g 101 nginx && \
+    adduser -D -u 101 -G nginx nginx
+
+WORKDIR /certs
+
+COPY generate-certs.sh /generate-certs.sh
+RUN chmod +x /generate-certs.sh
+
+# Run as root to ensure proper permissions
+USER root
+
+CMD ["/generate-certs.sh"] 
