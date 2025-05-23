@@ -2,7 +2,7 @@
   copy:
     src: files/docker-compose-mongo.yml
     dest: /opt/app/docker-compose.yml
-
+ 
 - name: Start mongo
   shell: docker-compose up -d mongo
   args:

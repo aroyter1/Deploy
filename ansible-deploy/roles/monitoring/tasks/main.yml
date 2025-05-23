@@ -9,6 +9,13 @@
     dest: /opt/app/monitoring/
     recursive: yes
 
+- name: Copy Grafana provisioning
+  synchronize:
+    src: ../../monitoring/provisioning/
+    dest: /opt/app/monitoring/provisioning/
+    recursive: yes
+    ignore_errors: yes
+
 - name: Start monitoring stack
   shell: docker-compose up -d
   args:

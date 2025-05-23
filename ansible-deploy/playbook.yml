@@ -2,6 +2,8 @@
   become: yes
   roles:
     - common
+    - promtail
+    - node_exporter
 
 - hosts: frontend
   become: yes
