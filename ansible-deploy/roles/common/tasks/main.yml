@@ -52,4 +52,15 @@
   service:
     name: docker
     state: started
-    enabled: yes 
+    enabled: yes
+
+- name: Remove pip-installed OpenSSL and cryptography from /usr/local/lib
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /usr/local/lib/python3.8/dist-packages/OpenSSL
+    - /usr/local/lib/python3.8/dist-packages/cryptography
+    - /usr/local/lib/python3.8/dist-packages/OpenSSL-*.dist-info
+    - /usr/local/lib/python3.8/dist-packages/cryptography-*.dist-info
+  ignore_errors: yes 
