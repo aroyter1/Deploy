@@ -1,3 +1,21 @@
+- name: Remove pip-installed pyOpenSSL and cryptography to avoid version conflicts
+  pip:
+    name:
+      - pyOpenSSL
+      - cryptography
+    state: absent
+    executable: pip3
+    extra_args: --yes
+  ignore_errors: yes
+
+- name: Reinstall system python3-openssl and python3-cryptography
+  apt:
+    name:
+      - python3-openssl
+      - python3-cryptography
+    state: present
+    update_cache: yes
+
 - name: Install required packages
   apt:
     name:
