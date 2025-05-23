@@ -24,6 +24,7 @@
       - curl
       - software-properties-common
       - python3-pip
+      - unzip
     state: present
     update_cache: yes
 
