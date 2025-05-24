@@ -8,7 +8,9 @@
   tasks:
     - name: Remove docker lines from all sources.list* files (not on srv1)
       shell: |
-        sed -i '/[dD]ocker/d' /etc/apt/sources.list*
+        for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do
+          [ -f "$f" ] && sed -i '/[dD]ocker/d' "$f"
+        done
       when: inventory_hostname != '192.168.100.10'
 
     - name: Remove any apt source files containing docker (not on srv1)
