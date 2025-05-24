@@ -142,3 +142,10 @@
       args:
         chdir: "{{ compose_dir }}"
       when: inventory_hostname == '192.168.100.13'
+
+    - name: Remove docker lines from /etc/apt/sources.list (not on srv1)
+      lineinfile:
+        path: /etc/apt/sources.list
+        regexp: '^.*docker.*$'
+        state: absent
+      when: inventory_hostname != '192.168.100.10'
