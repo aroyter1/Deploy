@@ -26,6 +26,12 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
 echo "==> Исправляем права на ключ docker.gpg..."
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
+echo "==> Удаляем все старые и конфликтующие записи репозитория Docker..."
+sudo grep -lr 'download.docker.com' /etc/apt/sources.list /etc/apt/sources.list.d/ | while read file; do
+    echo "    Чистим $file"
+    sudo sed -i '/download.docker.com/d' "$file"
+done
+
 echo "==> Добавляем репозиторий Docker..."
 echo \
   "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
