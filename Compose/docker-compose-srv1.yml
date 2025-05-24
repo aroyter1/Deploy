@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: ../Frontend
+      args:
+        - VITE_API_URL=http://api.frontend.local:8080/api
+    ports:
+      - "80:80"
+    volumes:
+      - ../certs:/etc/nginx/certs:ro
+    depends_on:
+      - api
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://api.frontend.local:8080/api
+      - NGINX_HOST=frontend.local
+    extra_hosts:
+      - "api.frontend.local:192.168.100.10"
+      - "backend1.local:192.168.100.10"
+      - "backend2.local:192.168.100.11"
+      - "mongo.local:192.168.100.12"
+
+  api:
+    build:
+      context: ..
+      dockerfile: Dockerfile.api
+    ports:
+      - "8080:80"
+    volumes:
+      - ../certs:/etc/nginx/certs:ro
+    depends_on:
+      - backend1
+    environment:
+      - NGINX_HOST=api.frontend.local
+    extra_hosts:
+      - "frontend.local:192.168.100.10"
+      - "backend1.local:192.168.100.10"
+      - "backend2.local:192.168.100.11"
+      - "mongo.local:192.168.100.12"
+
+  backend1:
+    build: ../Backend
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo.local:27017/url-shortener
+      - CLIENT_URL=http://frontend.local
+      - BASE_URL=http://api.frontend.local:8080
+    volumes:
+      - ../certs:/app/certs:ro
+    extra_hosts:
+      - "mongo.local:192.168.100.12"

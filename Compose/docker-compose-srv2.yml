@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  backend2:
+    build: ../Backend
+    expose:
+      - "3000"
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongo.local:27017/url-shortener
+      - CLIENT_URL=http://frontend.local
+      - BASE_URL=http://api.frontend.local:8080
+    volumes:
+      - ../certs:/app/certs:ro
+    extra_hosts:
+      - "mongo.local:192.168.100.12"

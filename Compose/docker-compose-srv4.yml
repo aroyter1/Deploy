@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  dns:
+    build: ../dns
+    container_name: local-dns
+    cap_add:
+      - NET_ADMIN
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    volumes:
+      - ../dns/dnsmasq.conf:/etc/dnsmasq.conf:ro
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ../grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin

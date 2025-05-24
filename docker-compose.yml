@@ -1,15 +1,6 @@
 version: '3.8'
 
 services:
-  certgen:
-    build:
-      context: .
-      dockerfile: Dockerfile.certs
-    volumes:
-      - ./certs:/certs
-    environment:
-      - CERT_DIR=/certs
-
   dns:
     build: ./dns
     container_name: local-dns
