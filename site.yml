@@ -52,13 +52,6 @@
         creates: /etc/apt/keyrings/docker.gpg
       when: inventory_hostname != '192.168.100.10'
 
-    - name: Add docker apt repository (not on srv1)
-      apt_repository:
-        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu focal stable"
-        state: present
-        filename: docker
-      when: inventory_hostname != '192.168.100.10'
-
     - name: Remove pyOpenSSL installed via pip (not on srv1)
       shell: |
         pip uninstall -y pyOpenSSL || true
@@ -75,6 +68,13 @@
         force: yes
       when: inventory_hostname != '192.168.100.10'
       ignore_errors: yes
+
+    - name: Add docker apt repository (not on srv1)
+      apt_repository:
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu focal stable"
+        state: present
+        filename: docker
+      when: inventory_hostname != '192.168.100.10'
 
     - name: apt update (not on srv1)
       apt:
