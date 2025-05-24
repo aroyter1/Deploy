@@ -1,48 +1,32 @@
 #!/bin/bash
 
-set -e
+# Обновление системы
+sudo apt update && sudo apt upgrade -y
 
-echo "==> Удаляем старые версии Docker (если были)..."
-sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
+# Установка необходимых пакетов
+sudo apt install -y apt-transport-https ca-certificates curl software-properties-common
 
-echo "==> Обновляем индекс пакетов..."
-sudo apt-get update
-
-echo "==> Устанавливаем необходимые зависимости..."
-sudo apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    gnupg \
-    lsb-release \
-    software-properties-common
-
-echo "==> Добавляем официальный GPG-ключ Docker..."
+# Добавление GPG ключа Docker
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 
-echo "==> Добавляем репозиторий Docker..."
+# Добавление репозитория Docker
 sudo add-apt-repository \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) stable"
+   "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 
-echo "==> Обновляем индекс пакетов (ещё раз)..."
-sudo apt-get update
+# Установка Docker
+sudo apt update
+sudo apt install -y docker-ce
 
-echo "==> Устанавливаем Docker Engine и компоненты..."
-sudo apt-get install -y docker-ce docker-ce-cli containerd.io
+# Добавление пользователя в группу docker (чтобы запускать без sudo)
+sudo usermod -aG docker ${USER}
 
-echo "==> Устанавливаем Docker Compose v2 (compose-plugin)..."
-sudo apt-get install -y docker-compose-plugin
+# Установка Docker Compose (последняя стабильная версия)
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" \
+  -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
 
-echo "==> Добавляем пользователя $USER в группу docker..."
-sudo groupadd docker || true
-sudo usermod -aG docker $USER
-
-echo "==> Включаем и запускаем сервис Docker..."
-sudo systemctl enable --now docker
-
-echo "==> Проверяем версии..."
+# Проверка версий
 docker --version
-docker compose version
+docker-compose --version
 
-echo "==> Всё готово! Перезайдите в систему или выполните 'newgrp docker' для применения прав."
+echo "Установка завершена! Перезайдите в систему или выполните: exec su -l $USER"
