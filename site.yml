@@ -1,0 +1,103 @@
+---
+- hosts: all
+  become: yes
+  vars:
+    repo_url: "https://github.com/aroyter/Deploy.git"
+    repo_dir: "/root/Deploy"
+    compose_dir: "/root/Deploy/Compose"
+  tasks:
+    - name: Install git
+      apt:
+        name: git
+        state: present
+        update_cache: yes
+
+    - name: Clone repo
+      git:
+        repo: "{{ repo_url }}"
+        dest: "{{ repo_dir }}"
+        force: yes
+
+    - name: Make fix-ansible-openssl.sh executable
+      file:
+        path: "{{ repo_dir }}/fix-ansible-openssl.sh"
+        mode: '0755'
+
+    - name: Run fix-ansible-openssl.sh
+      command: bash fix-ansible-openssl.sh
+      args:
+        chdir: "{{ repo_dir }}"
+
+    - name: Prepare certs directory
+      file:
+        path: "{{ repo_dir }}/certs"
+        state: directory
+        mode: '0755'
+
+    - name: Prepare mongodb_data directory (only on srv3)
+      file:
+        path: "{{ repo_dir }}/mongodb_data"
+        state: directory
+        mode: '0777'
+      when: inventory_hostname == '192.168.100.12'
+
+    - name: Set owner for mongodb_data (only on srv3)
+      file:
+        path: "{{ repo_dir }}/mongodb_data"
+        owner: 999
+        group: 999
+        recurse: yes
+      when: inventory_hostname == '192.168.100.12'
+
+    - name: Prepare grafana_data directory (only on srv4)
+      file:
+        path: "{{ repo_dir }}/grafana_data"
+        state: directory
+        mode: '0777'
+      when: inventory_hostname == '192.168.100.13'
+
+    - name: Set owner for grafana_data (only on srv4)
+      file:
+        path: "{{ repo_dir }}/grafana_data"
+        owner: 472
+        group: 472
+        recurse: yes
+      when: inventory_hostname == '192.168.100.13'
+
+    - name: Prepare dns directory and file (only on srv4)
+      file:
+        path: "{{ repo_dir }}/dns"
+        state: directory
+        mode: '0755'
+      when: inventory_hostname == '192.168.100.13'
+
+    - name: Ensure dnsmasq.conf exists (only on srv4)
+      file:
+        path: "{{ repo_dir }}/dns/dnsmasq.conf"
+        state: touch
+        mode: '0644'
+      when: inventory_hostname == '192.168.100.13'
+
+    - name: Run docker-compose on srv1
+      command: docker-compose -f docker-compose-srv1.yml up -d
+      args:
+        chdir: "{{ compose_dir }}"
+      when: inventory_hostname == '192.168.100.10'
+
+    - name: Run docker-compose on srv2
+      command: docker-compose -f docker-compose-srv2.yml up -d
+      args:
+        chdir: "{{ compose_dir }}"
+      when: inventory_hostname == '192.168.100.11'
+
+    - name: Run docker-compose on srv3
+      command: docker-compose -f docker-compose-srv3.yml up -d
+      args:
+        chdir: "{{ compose_dir }}"
+      when: inventory_hostname == '192.168.100.12'
+
+    - name: Run docker-compose on srv4
+      command: docker-compose -f docker-compose-srv4.yml up -d
+      args:
+        chdir: "{{ compose_dir }}"
+      when: inventory_hostname == '192.168.100.13'
