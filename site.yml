@@ -15,10 +15,20 @@
       when: inventory_hostname != '192.168.100.10'
       ignore_errors: yes
 
+    - name: Remove docker lines from all files in sources.list.d (not on srv1)
+      shell: |
+        shopt -s nullglob
+        for f in /etc/apt/sources.list.d/*; do
+          [ -f "$f" ] && sed -i '/[dD]ocker/d' "$f"
+        done
+      when: inventory_hostname != '192.168.100.10'
+      ignore_errors: yes
+
     - name: Remove any apt source files containing docker (not on srv1)
       shell: |
         grep -lri docker /etc/apt/sources.list.d/ | xargs -r rm -f
       when: inventory_hostname != '192.168.100.10'
+      ignore_errors: yes
 
     - name: Remove all docker sources (not on srv1)
       file:
