@@ -15,10 +15,16 @@ sudo apt-get install -y \
     gnupg \
     lsb-release
 
-echo "==> Добавляем официальный GPG-ключ Docker..."
+echo "==> Создаём директорию для ключей, если не существует..."
 sudo install -m 0755 -d /etc/apt/keyrings
+
+echo "==> Скачиваем и добавляем официальный GPG-ключ Docker..."
+sudo rm -f /etc/apt/keyrings/docker.gpg
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
     sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+echo "==> Исправляем права на ключ docker.gpg..."
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 echo "==> Добавляем репозиторий Docker..."
 echo \
