@@ -6,11 +6,9 @@
     repo_dir: "/root/Deploy"
     compose_dir: "/root/Deploy/Compose"
   tasks:
-    - name: Remove docker lines from /etc/apt/sources.list (not on srv1)
-      lineinfile:
-        path: /etc/apt/sources.list
-        regexp: '[dD]ocker'
-        state: absent
+    - name: Remove docker lines from all sources.list* files (not on srv1)
+      shell: |
+        sed -i '/[dD]ocker/d' /etc/apt/sources.list*
       when: inventory_hostname != '192.168.100.10'
 
     - name: Remove any apt source files containing docker (not on srv1)
