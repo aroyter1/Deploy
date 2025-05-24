@@ -12,11 +12,18 @@
         state: present
         update_cache: yes
 
-    - name: Clone repo
+    - name: Remove old Deploy directory (not on srv1)
+      file:
+        path: /root/Deploy
+        state: absent
+      when: inventory_hostname != '192.168.100.10'
+
+    - name: Clone repo (not on srv1)
       git:
         repo: "{{ repo_url }}"
         dest: "{{ repo_dir }}"
         force: yes
+      when: inventory_hostname != '192.168.100.10'
 
     - name: Make fix-ansible-openssl.sh executable
       file:
