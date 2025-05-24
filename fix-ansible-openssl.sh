@@ -2,39 +2,44 @@
 
 set -e
 
-echo "==> Определяем версию Python 3..."
-PYTHON_BIN=$(which python3)
-PYTHON_VERSION=$($PYTHON_BIN -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-PYTHON_SITE_PACKAGES="/usr/local/lib/python${PYTHON_VERSION}/dist-packages"
+echo "==> Удаляем старые версии Docker (если были)..."
+sudo apt-get remove -y docker docker-engine docker.io containerd runc || true
 
-echo "Используется Python: $PYTHON_BIN ($PYTHON_VERSION)"
-echo "Site-packages: $PYTHON_SITE_PACKAGES"
+echo "==> Обновляем индекс пакетов..."
+sudo apt-get update
 
-echo "==> Удаляем pip-версии pyOpenSSL и cryptography (если есть)..."
-sudo pip3 uninstall -y pyOpenSSL cryptography || true
+echo "==> Устанавливаем необходимые зависимости..."
+sudo apt-get install -y \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
 
-echo "==> Удаляем остатки из $PYTHON_SITE_PACKAGES ..."
-sudo rm -rf $PYTHON_SITE_PACKAGES/OpenSSL*
-sudo rm -rf $PYTHON_SITE_PACKAGES/cryptography*
-sudo rm -rf $PYTHON_SITE_PACKAGES/pyOpenSSL*
-sudo rm -rf $PYTHON_SITE_PACKAGES/pyOpenSSL-*.dist-info
-sudo rm -rf $PYTHON_SITE_PACKAGES/cryptography-*.dist-info
+echo "==> Добавляем официальный GPG-ключ Docker..."
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | \
+    sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 
-echo "==> Переустанавливаем системные пакеты..."
-sudo apt update
-sudo apt install --reinstall -y python3-openssl python3-cryptography python3-pip
+echo "==> Добавляем репозиторий Docker..."
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(lsb_release -cs) stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-echo "==> Обновляем pip..."
-sudo pip3 install --upgrade pip
+echo "==> Обновляем индекс пакетов (ещё раз)..."
+sudo apt-get update
 
-echo "==> Устанавливаем pyOpenSSL и cryptography через pip..."
-sudo pip3 install --force-reinstall pyOpenSSL cryptography
+echo "==> Устанавливаем Docker Engine, CLI, containerd и compose-plugin..."
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
-echo "==> Проверяем импорт и путь к библиотекам..."
-$PYTHON_BIN -c "import OpenSSL; print('pyOpenSSL:', OpenSSL.__version__, OpenSSL.__file__)"
-$PYTHON_BIN -c "import cryptography; print('cryptography:', cryptography.__version__, cryptography.__file__)"
+echo "==> Добавляем пользователя $USER в группу docker..."
+sudo usermod -aG docker $USER
 
-echo "==> Проверка импорта X509StoreFlags..."
-$PYTHON_BIN -c 'from OpenSSL.crypto import X509StoreFlags; print("X509StoreFlags OK")'
+echo "==> Включаем и запускаем сервис Docker..."
+sudo systemctl enable --now docker
 
-echo "==> Всё готово для работы Ansible!"
+echo "==> Проверяем версии..."
+docker --version
+docker compose version
+
+echo "==> Всё готово! Перезайдите в систему или выполните 'newgrp docker' для применения прав."
