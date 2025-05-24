@@ -59,6 +59,23 @@
         filename: docker
       when: inventory_hostname != '192.168.100.10'
 
+    - name: Remove pyOpenSSL installed via pip (not on srv1)
+      shell: |
+        pip uninstall -y pyOpenSSL || true
+        pip3 uninstall -y pyOpenSSL || true
+      when: inventory_hostname != '192.168.100.10'
+      ignore_errors: yes
+
+    - name: Reinstall system python3-openssl and python3-cryptography (not on srv1)
+      apt:
+        name:
+          - python3-openssl
+          - python3-cryptography
+        state: present
+        force: yes
+      when: inventory_hostname != '192.168.100.10'
+      ignore_errors: yes
+
     - name: apt update (not on srv1)
       apt:
         update_cache: yes
@@ -166,3 +183,4 @@
       args:
         chdir: "{{ compose_dir }}"
       when: inventory_hostname == '192.168.100.13'
+
