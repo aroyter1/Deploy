@@ -8,12 +8,10 @@
   tasks:
     - name: Remove docker lines from all sources.list* files (not on srv1)
       shell: |
+        shopt -s nullglob
         for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list; do
-          if [ -f "$f" ]; then
-            sed -i '/[dD]ocker/d' "$f"
-          fi
+          [ -f "$f" ] && sed -i '/[dD]ocker/d' "$f"
         done
-        exit 0
       when: inventory_hostname != '192.168.100.10'
       ignore_errors: yes
 
